@@ -1,0 +1,49 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define MAX_BUCKET_SIZE 100
+#define LEAK_RATE 5
+
+typedef struct {
+    int size;
+    int leakRate;
+    int lastLeak;
+} LeakyBucket;
+
+void initLeakyBucket(LeakyBucket* bucket) {
+    bucket->size = 0;
+    bucket->leakRate = LEAK_RATE;
+    bucket->lastLeak = time(NULL);
+}
+
+int canRequest(LeakyBucket* bucket) {
+    time_t currentTime = time(NULL);
+
+    if (currentTime - bucket->lastLeak >= 1) {
+        bucket->size += bucket->leakRate;
+        bucket->lastLeak = currentTime;
+    }
+
+    if (bucket->size < MAX_BUCKET_SIZE) {
+        bucket->size++;
+        return 1;
+    }
+
+    return 0;
+}
+
+int main() {
+    LeakyBucket bucket;
+    initLeakyBucket(&bucket);
+
+    for (int i = 0; i < 100; i++) {
+        if (canRequest(&bucket)) {
+            printf("Request %d accepted\n", i);
+        } else {
+            printf("Request %d rejected (bucket full)\n", i);
+        }
+    }
+
+    return 0;
+}
